@@ -2,17 +2,18 @@
 
 namespace App\Http\Controllers\Api\Auth;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\Api\BaseController;
 use App\Contracts\UserContract;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Resources\User as UserResource;
 use App\Http\Requests\Auth\RegisterRequest;
-use App\Enums\ResponseCode;
+
 
 use Illuminate\Database\QueryException;
 use Exception;
 
-class RegisteredUserController extends Controller
+class RegisteredUserController extends BaseController
 {
     protected $userRepository;
     /**
@@ -32,20 +33,17 @@ class RegisteredUserController extends Controller
      *
      * @throws Illuminate\Database\QueryException
      */
-    public function store(RegisterRequest $params)
+    public function store(RegisterRequest $request)
     {
         try{
-            $user = $this->userRepository->create($params);
+            $user = $this->userRepository->create($request->validated());
+            Auth::login($user);
             event(new Registered($user));
-            Auth::attempt($params->only('email', 'password'));
-            $success['token'] = $user->createToken('laravel-token')->accessToken;
-            $response = ['success' => $success];
-            $code = ResponseCode::SUCCESS;
+            $success['user_info'] = new UserResource($user);
+            return $this->handleResponse("Registration successfull", $success);
         }
         catch(QueryException $e){
-            $response = ['error' => $e->getMessage()];
-            $code = ResponseCode::INTERNAL_SERVER_ERROR;
+            return $this->handleError($e->getMessage(),ResponseCode::INTERNAL_SERVER_ERROR);
         }
-        return response()->json($response, $code);
-    }
+    } 
 }

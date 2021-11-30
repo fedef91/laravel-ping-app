@@ -17,3 +17,8 @@ use Illuminate\Support\Facades\Artisan;
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
+
+/* Sanctum first attempt laravel cookie session else attemp with api token in api.php */
+Route::group(['middleware' => ['auth:sanctum']], function () {
+    
+});

@@ -10,9 +10,10 @@ import {
     AUTH_LOGIN,
   } from "../actions/auth";
   
-  import { USER_REQUEST } from "../actions/user";
-  import { SET_ERROR, CLEAR_ERROR } from "../actions/errors";
+  import { USER_SUCCESS } from "../actions/user";
+  import { SET_ERROR } from "../actions/errors";
   
+  /* data will be the same of the model resource */
   const state = {
     token: "",
     status: "",
@@ -27,20 +28,18 @@ import {
   const actions = {
     [AUTH_REGISTER]: ({ commit, dispatch } , data) => {
       return new Promise((resolve, reject) => {
-        commit(AUTH_REQUEST);
-        axios.post("/api/register", data.params)
-        .then(resp => {
-          localStorage.setItem("user-token",resp.data.success.token)
-          axios.defaults.headers.common['Authorization'] = `Bearer ${resp.data.success.token}`;
-          dispatch(USER_REQUEST);
-          commit(AUTH_SUCCESS, resp.data.success.token);
-          resolve(resp);
-        })
-        .catch(err => {
-          commit(AUTH_ERROR);
-          dispatch(SET_ERROR, err);
-          reject(err)
-        })  
+          commit(AUTH_REQUEST);
+          axios.post("/api/register", data.params)
+            .then(resp => {
+              commit(AUTH_SUCCESS);
+              commit(USER_SUCCESS, resp.data);
+              resolve(resp);
+            })
+            .catch(err => {
+              commit(AUTH_ERROR);
+              dispatch(SET_ERROR, err);
+              reject(err)
+            })  
       });
     },
     [AUTH_LOGIN]: ({ commit, dispatch } , data) => {
@@ -48,10 +47,10 @@ import {
           commit(AUTH_REQUEST);
           axios.post("/api/login", data.params)
           .then(resp => {
-            localStorage.setItem("user-token",resp.data.success.token)
-            axios.defaults.headers.common['Authorization'] = `Bearer ${resp.data.success.token}`;
-            dispatch(USER_REQUEST);
-            commit(AUTH_SUCCESS, resp.data.success.token);
+            //localStorage.setItem("user-token",resp.data.success.token)
+            //axios.defaults.headers.common['Authorization'] = `Bearer ${resp.data.success.token}`;
+            commit(AUTH_SUCCESS);
+            dispatch(USER_REQUEST, resp.data);
             resolve(resp);
           })
           .catch(err => {
@@ -76,9 +75,8 @@ import {
     [AUTH_REQUEST ]: state => {
       state.status = "loading";
     },
-    [AUTH_SUCCESS]: (state, token) => {
+    [AUTH_SUCCESS]: (state) => {
       state.status = "success";
-      state.token = token;
       state.hasLoadedOnce = true;
     },
     [AUTH_ERROR]: state => {
@@ -86,8 +84,9 @@ import {
       state.hasLoadedOnce = true;
     },
     [AUTH_LOGOUT]: state => {
-      state.token = "";
-    }
+      state.status = "success";
+      state.hasLoadedOnce = true;
+    },
   };
   
   export default {

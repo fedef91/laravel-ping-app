@@ -2,15 +2,16 @@
 
 namespace App\Http\Controllers\Api\Auth;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\Api\BaseController;
 use App\Http\Requests\Auth\LoginRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Enums\ResponseCode;
+use App\Http\Resources\User as UserResource;
 
 use Exception;
 
-class AuthenticatedSessionController extends Controller
+class AuthenticatedSessionController extends BaseController
 {
     /**
      * Handle an incoming authentication request.
@@ -22,16 +23,13 @@ class AuthenticatedSessionController extends Controller
     {
         try{
             $request->authenticate();
-            $success['token'] = Auth::user()->createToken('laravel-token')->accessToken;
-            $response = ['success' => $success];
-            $code = ResponseCode::SUCCESS;
+            $user = Auth::user();
+            $success['user_info'] = new UserResource($user);
+            return $this->handleResponse("Login successfull", $success);
         }
         catch(Exception $e){
-            $response = ['errors' => $e->errors()];
-            $code = ResponseCode::INTERNAL_SERVER_ERROR;
-        }
-        return response()->json($response, $code);
-        
+            return $this->handleError($e->getMessage(), $e->errors(), ResponseCode::INTERNAL_SERVER_ERROR);
+        } 
     }
 
     /**
@@ -43,16 +41,13 @@ class AuthenticatedSessionController extends Controller
     public function destroy(Request $request)
     {
         try{
-            $token = Auth::user()->token();
-            $token->delete();
-            Auth::guard('web')->logout();
-            $response = "";
-            $code = ResponseCode::SUCCESS;
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();//csrf
+            return $this->handleResponse("Logout successfull");
         }
         catch(Exception $e){
-            $response = ['error' => $e->getMessage()];
-            $code = ResponseCode::INTERNAL_SERVER_ERROR;
+            return $this->handleError($e->getMessage(), $e->errors(), ResponseCode::INTERNAL_SERVER_ERROR);
         }
-        return response()->json($response , $code);
     }
 }

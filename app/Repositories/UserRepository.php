@@ -1,10 +1,13 @@
 <?php
 
+namespace App\Repositories;
+
 use App\Models\User;
 use App\Contracts\UserContract;
 use Illuminate\Database\QueryException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Doctrine\Instantiator\Exception\InvalidArgumentException;
+use Illuminate\Support\Facades\Hash;
 
 class UserRepository extends BaseRepository implements UserContract
 {
@@ -28,12 +31,12 @@ class UserRepository extends BaseRepository implements UserContract
             
     /**
     * @param array $params
-    * @return Category|mixed
+    * @return User|mixed
     */
     public function create(array $params){
         try {
-            //hash password
-            $collection = collect($params)->except("_token");
+            $collection = collect($params)->except("password");
+            $collection->put('password', Hash::make($params['password']));
             $data = new User($collection->all());
             $data->save();
             return $data;
@@ -47,9 +50,9 @@ class UserRepository extends BaseRepository implements UserContract
     * @param array $params
     * @return mixed
     */
-    public function update(array $params){
-        $data = $this->findById($params["id"]);
-        $collection = collect($params)->except("_token");
+    public function updateUser(array $params ,int  $id){
+        $data = $this->findById($id);
+        //$collection = collect($params)->except("_token");
         $data->update($collection->all());
         return $data;
     }
@@ -58,7 +61,7 @@ class UserRepository extends BaseRepository implements UserContract
     * @param $id
     * @return bool|mixed
     */
-    public function delete($id){
+    public function deleteUser(int $id){
         $data = $this->findById($id);
         $data->delete();
         return $data;

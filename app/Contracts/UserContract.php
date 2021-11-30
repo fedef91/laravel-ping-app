@@ -16,14 +16,15 @@ interface UserContract {
     public function create(array $params);
 
     /**
-    * @param array $params
+    * @param array $params 
+    * @param int $id
     * @return mixed
     */
-    public function update(array $params);
+    public function updateUser(array $params, int $id);
 
     /**
     * @param $id
     * @return bool
     */
-    public function delete($id);
+    public function deleteUser(int $id);
 }

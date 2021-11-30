@@ -3,6 +3,10 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
+use App\Http\Controllers\Api\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Api\Auth\RegisteredUserController;
+
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -14,6 +18,12 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+Route::domain('api.localhost:8888')->group(function () {
+    Route::post('/register', [RegisteredUserController::class, 'store']);
+    Route::post('/login', [AuthenticatedSessionController::class, 'store']); 
+
+    Route::group(['middleware' => ['auth:sanctum']], function () {
+    
+    });
 });
+
